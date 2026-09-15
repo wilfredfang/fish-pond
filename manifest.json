@@ -1,0 +1,13 @@
+{
+  "name": "小W的鱼塘 · 投资账本",
+  "short_name": "鱼塘",
+  "description": "每周只填买卖份数和成交价，其余自动算",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef2f7",
+  "theme_color": "#2563eb",
+  "lang": "zh-CN",
+  "icons": []
+}
