@@ -1564,6 +1564,14 @@ async function doPush(silent){
 }
 // 打开页面自动拉取（本端没有未上传改动时）
 async function syncOnLoad(){
+  // 支持 ?gist=ID 链接参数：打开即自动填好 Gist ID 并记住，免去手打 32 位字符
+  try{
+    const q=new URLSearchParams(location.search).get("gist");
+    if(q && /^[0-9a-f]{16,40}$/i.test(q.trim())){
+      const cfg0=syncCfg(); cfg0.gistId=q.trim(); saveSyncCfg(cfg0);
+      document.getElementById("sync-gist").value=q.trim();
+    }
+  }catch(e){}
   const cfg=syncCfg();
   if(!cfg.token) { setSyncStatus("未连接。填好令牌点「🔗 首次连接」，之后每次保存会自动同步；手机浏览器打开同一网址即可看到同一份数据。"); return; }
   if(cfg.gistId) document.getElementById("sync-gist").value=cfg.gistId;
