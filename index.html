@@ -264,15 +264,18 @@
       <h3>☁️ 云同步（手机 / 电脑共用同一份数据）</h3>
       <div class="row-grid">
         <div class="field" style="grid-column:1/-1"><label>GitHub 令牌（免费，权限只勾 gist 即可）</label><input id="sync-token" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off"></div>
-        <div class="field"><label>Gist ID（留空＝自动帮你新建一个私有 Gist）</label><input id="sync-gist" placeholder="留空自动创建" autocomplete="off"></div>
+        <div class="field"><label>Gist ID（<b>已经建好了就一定要填</b>，别留空）</label><input id="sync-gist" placeholder="填已有的 ID" autocomplete="off"></div>
         <div class="field" style="display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap">
-          <button class="btn" id="btn-sync-connect">🔗 连接并上传</button>
-          <button class="btn ghost" id="btn-sync-pull">⬇️ 拉取云端</button>
-          <button class="btn ghost" id="btn-sync-push">⬆️ 上传本地</button>
+          <button class="btn ghost" id="btn-sync-pull">⬇️ 拉取云端（用云端覆盖本机）</button>
+          <button class="btn ghost" id="btn-sync-push">⬆️ 上传本地（用本机覆盖云端）</button>
+          <button class="btn" id="btn-sync-connect" title="只在第一次建 Gist 时用，已建好就别点">🔗 仅首次连接</button>
         </div>
       </div>
-      <div class="hint" id="sync-status">未连接。填好令牌点「🔗 连接并上传」，之后每次保存会自动同步；手机浏览器打开同一网址即可看到同一份数据。</div>
+      <div class="hint" id="sync-status">未连接。填好令牌点「🔗 首次连接」，之后每次保存会自动同步；手机浏览器打开同一网址即可看到同一份数据。</div>
       <div class="hint" style="margin-top:6px;opacity:.85">
+        · <b>平时只用两个按钮</b>：换设备／换浏览器 → 「⬇️ 拉取云端」；本周录完保存会自动上传（也可手动「⬆️ 上传本地」）。<br>
+        · <b>「🔗 仅首次连接」只在第一次用</b>：它是把本机<b>整份覆盖</b>到云端，<b>不是合并</b>。Gist 建好之后别再点，尤其 Gist ID 留空时点它会另建一份，两端就对不上了。<br>
+        · 同步是<b>整份覆盖</b>不是合并：哪边持仓更全，就用哪边覆盖另一边（不确定就先「拉取云端」看一眼）。<br>
         · 数据存在<b>你自己的私有 Gist</b>，别人看不到；Gist 每次更新都留版本历史，等于自动备份、改错可回滚。<br>
         · 手机用法：Safari／Chrome 打开网址 → 分享 → <b>添加到主屏幕</b>，之后点桌面图标全屏使用，跟 App 一样。<br>
         · 两端都改过时会提示冲突，你选保留哪边；一般建议「按更新时间新的为准」。
@@ -1505,6 +1508,12 @@ async function doConnect(){
   let cfg=syncCfg(); cfg.token=token;
   const gid=document.getElementById("sync-gist").value.trim();
   if(gid) cfg.gistId=gid;
+  // 防呆：Gist ID 留空 = 另建一份新的，很容易导致两端各连一个、数据对不上
+  if(!cfg.gistId){
+    if(!confirm("Gist ID 是空的，点下去会【新建一份云端数据】，并把本机 "+state.weeks.length+" 周整份覆盖上去。\n\n如果你之前已经建过 Gist（比如电脑或手机上已经同步过），请点「取消」，把那个 Gist ID 填进上面的框，然后点「⬇️ 拉取云端」。\n\n确定要新建一份吗？")) return;
+  }else{
+    if(!confirm("将用本机数据【整份覆盖】云端（不是合并）。\n本机 "+state.weeks.length+" 周 / "+state.weeks.reduce((s,w)=>s+w.holdings.length,0)+" 条持仓。\n\n如果只是想拿到云端的数据，请点「取消」，改点「⬇️ 拉取云端」。\n\n确定覆盖云端吗？")) return;
+  }
   try{
     setSyncStatus("⏳ 连接中…");
     if(cfg.gistId){
@@ -1534,7 +1543,7 @@ async function doConnect(){
 }
 async function doPull(){
   const cfg=syncCfg();
-  if(!cfg.token||!cfg.gistId){ toast("先点「🔗 连接并上传」"); return; }
+  if(!cfg.token||!cfg.gistId){ toast("先填令牌和 Gist ID"); return; }
   try{
     const {data,updatedAt}=await cloudPull(cfg);
     applyRemote(data, updatedAt);
@@ -1544,7 +1553,7 @@ async function doPull(){
 }
 async function doPush(silent){
   const cfg=syncCfg();
-  if(!cfg.token||!cfg.gistId){ if(!silent) toast("先点「🔗 连接并上传」"); return; }
+  if(!cfg.token||!cfg.gistId){ if(!silent) toast("先填令牌和 Gist ID"); return; }
   try{
     const j=await cloudPush(cfg, state);
     localStorage.setItem(SYNC_AT, j.updated_at||new Date().toISOString());
@@ -1556,7 +1565,7 @@ async function doPush(silent){
 // 打开页面自动拉取（本端没有未上传改动时）
 async function syncOnLoad(){
   const cfg=syncCfg();
-  if(!cfg.token) { setSyncStatus("未连接。填好令牌点「🔗 连接并上传」，之后每次保存会自动同步；手机浏览器打开同一网址即可看到同一份数据。"); return; }
+  if(!cfg.token) { setSyncStatus("未连接。填好令牌点「🔗 首次连接」，之后每次保存会自动同步；手机浏览器打开同一网址即可看到同一份数据。"); return; }
   if(cfg.gistId) document.getElementById("sync-gist").value=cfg.gistId;
   document.getElementById("sync-token").value=cfg.token;
   setSyncStatus("⏳ 检查云端…");
