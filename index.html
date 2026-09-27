@@ -414,6 +414,7 @@ if(!state.profile) state.profile = defaultProfile();
 ensureRealized(state);
 let draft = blankDraft();
 let fetchSt = []; // 每行行情获取状态 ok/fail/none
+if(state.weeks && state.weeks.length) populateDraftFromLast();  // 打开即把最新一周载入选入草稿，避免录入页空白（拉取云端后也会再刷新一次）
 
 function defaultProfile(){
   return {title:"小W的鱼塘", year:"2019", alipay:"10635", em:"23228", emret:"6年+108.74%"};
