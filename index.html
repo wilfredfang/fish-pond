@@ -108,9 +108,37 @@
     .kpi .lab{font-size:12px;}
     .kpi .val{font-size:18px;margin-top:8px;}
     #week-sel{font-size:15px;}
-    /* 录入表：手机上保持原宽、可横向滑动，避免 17 列被压窄导致数据截断 */
-    .edit-tbl{min-width:1100px!important;}
-    .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    /* 录入表：手机上放弃横向滚动的宽表，改成每张持仓一张卡片竖排，干净不挤压 */
+    .tbl-wrap{overflow:visible;}
+    .edit-tbl{min-width:0!important;border:0;background:transparent;}
+    .edit-tbl thead{display:none;}
+    .edit-tbl,.edit-tbl tbody,.edit-tbl tr,.edit-tbl td{display:block;width:auto!important;}
+    .edit-tbl tr{
+      position:relative;background:var(--card);border:1px solid var(--edge);
+      border-radius:14px;padding:4px 14px 8px;margin-bottom:14px;
+      box-shadow:0 1px 3px rgba(15,23,42,.06);
+    }
+    .edit-tbl td{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:9px 0;border-bottom:1px dashed var(--edge);text-align:left;
+    }
+    .edit-tbl tr td:last-child{border-bottom:0;}
+    .edit-tbl td::before{
+      content:attr(data-label);flex:none;width:76px;color:var(--sub);
+      font-size:13px;font-weight:600;
+    }
+    .edit-tbl td input,.edit-tbl td select{flex:1;min-width:0;text-align:right;}
+    .edit-tbl td[data-label="名称"]{padding-top:12px;}
+    .edit-tbl td[data-label="名称"]::before{width:auto;margin-right:8px;}
+    .edit-tbl td[data-label="名称"] input{font-size:17px!important;font-weight:600;text-align:left;}
+    .edit-tbl td[data-label="行情"]{padding-bottom:2px;}
+    .edit-tbl td[data-label="删除"]{justify-content:flex-end;border-bottom:0;}
+    .edit-tbl td[data-label="删除"]::before{display:none;}
+    .edit-tbl td[data-label="删除"] .del{
+      background:var(--input);color:#dc2626;border:1px solid var(--edge);
+      border-radius:8px;padding:8px 20px;font-size:14px;
+    }
+    .edit-tbl .auto{background:var(--tint-slate);color:var(--sub);}
   }
   .panels > .panel{min-width:0;overflow:hidden;}
   .prow{display:flex;align-items:center;margin:9px 0;font-size:13px;}
@@ -1284,23 +1312,23 @@ function renderInput(){
     const tr=document.createElement("tr");
     tr.draggable=true; tr.dataset.ri=i;
     tr.innerHTML=`
-      <td style="text-align:center">${stHtml}</td>
-      <td class="c-opt" style="text-align:center;cursor:grab;color:var(--sub);user-select:none" class="drag-h" data-i="${i}" title="按住拖动调整顺序">≡</td>
-      <td class="c-opt"><input value="${esc(h.platform)}" data-i="${i}" data-k="platform" placeholder="支付宝"></td>
-      <td><input value="${esc(h.name)}" data-i="${i}" data-k="name" placeholder="名称"></td>
-      <td class="c-opt"><select data-i="${i}" data-k="type">${TYPES.map(t=>`<option ${t===h.type?"selected":""}>${t}</option>`).join("")}</select></td>
-      <td class="c-opt"><input value="${esc(h.code)}" data-i="${i}" data-k="code" placeholder="008163" style="font-family:monospace"></td>
-      <td class="c-opt"><select data-i="${i}" data-k="mkt">${MKTS.map(([v,l])=>`<option value="${v}" ${v===h.mkt?"selected":""}>${l}</option>`).join("")}</select></td>
-      <td class="c-opt" style="color:var(--sub);font-variant-numeric:tabular-nums" title="上周份额（只读）">${h.prevShares?shfmt(h.prevShares):"—"}</td>
-      <td><input type="number" step="any" value="${h.buy||""}" data-i="${i}" data-k="buy" placeholder="0" title="本周买入份数，不买留空"></td>
-      <td><input type="number" step="any" value="${h.sell||""}" data-i="${i}" data-k="sell" placeholder="0" title="本周卖出份数，没卖留空"></td>
-      <td><input type="number" step="any" value="${h.tx||""}" data-i="${i}" data-k="tx" placeholder="选填" title="当时实际成交价，填了自动算净投入和成本"></td>
-      <td><input type="number" step="any" class="auto" value="${h.shares||""}" data-i="${i}" data-k="shares" placeholder="0" title="自动 = 上周份额 + 买入 − 卖出，可手动改"></td>
-      <td class="c-opt"><input type="number" step="any" value="${h.price||""}" data-i="${i}" data-k="price" placeholder="自动"></td>
-      <td><input type="number" step="any" class="auto" value="${h.value||""}" data-i="${i}" data-k="value" placeholder="自动算"></td>
-      <td><input type="number" step="any" value="${h.cost||""}" data-i="${i}" data-k="cost" placeholder="0"></td>
-      <td><input type="number" step="any" class="auto" value="${h.net||""}" data-i="${i}" data-k="net" placeholder="0"></td>
-      <td><button class="del" data-i="${i}">✕</button></td>`;
+      <td data-label="行情" style="text-align:center">${stHtml}</td>
+      <td class="c-opt" data-label="≡" style="text-align:center;cursor:grab;color:var(--sub);user-select:none" data-i="${i}" title="按住拖动调整顺序">≡</td>
+      <td class="c-opt" data-label="平台"><input value="${esc(h.platform)}" data-i="${i}" data-k="platform" placeholder="支付宝"></td>
+      <td data-label="名称"><input value="${esc(h.name)}" data-i="${i}" data-k="name" placeholder="名称"></td>
+      <td class="c-opt" data-label="类型"><select data-i="${i}" data-k="type">${TYPES.map(t=>`<option ${t===h.type?"selected":""}>${t}</option>`).join("")}</select></td>
+      <td class="c-opt" data-label="代码"><input value="${esc(h.code)}" data-i="${i}" data-k="code" placeholder="008163" style="font-family:monospace"></td>
+      <td class="c-opt" data-label="市场"><select data-i="${i}" data-k="mkt">${MKTS.map(([v,l])=>`<option value="${v}" ${v===h.mkt?"selected":""}>${l}</option>`).join("")}</select></td>
+      <td class="c-opt" data-label="上周份额" style="color:var(--sub);font-variant-numeric:tabular-nums" title="上周份额（只读）">${h.prevShares?shfmt(h.prevShares):"—"}</td>
+      <td data-label="本周买入"><input type="number" step="any" value="${h.buy||""}" data-i="${i}" data-k="buy" placeholder="0" title="本周买入份数，不买留空"></td>
+      <td data-label="本周卖出"><input type="number" step="any" value="${h.sell||""}" data-i="${i}" data-k="sell" placeholder="0" title="本周卖出份数，没卖留空"></td>
+      <td data-label="成交价"><input type="number" step="any" value="${h.tx||""}" data-i="${i}" data-k="tx" placeholder="选填" title="当时实际成交价，填了自动算净投入和成本"></td>
+      <td data-label="总份额"><input type="number" step="any" class="auto" value="${h.shares||""}" data-i="${i}" data-k="shares" placeholder="0" title="自动 = 上周份额 + 买入 − 卖出，可手动改"></td>
+      <td class="c-opt" data-label="最新价"><input type="number" step="any" value="${h.price||""}" data-i="${i}" data-k="price" placeholder="自动"></td>
+      <td data-label="市值"><input type="number" step="any" class="auto" value="${h.value||""}" data-i="${i}" data-k="value" placeholder="自动算"></td>
+      <td data-label="持仓成本"><input type="number" step="any" value="${h.cost||""}" data-i="${i}" data-k="cost" placeholder="0"></td>
+      <td data-label="净投入"><input type="number" step="any" class="auto" value="${h.net||""}" data-i="${i}" data-k="net" placeholder="0"></td>
+      <td data-label="删除"><button class="del" data-i="${i}">✕</button></td>`;
     tb.appendChild(tr);
   });
   tb.querySelectorAll("input,select").forEach(el=>{
