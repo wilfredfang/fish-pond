@@ -97,6 +97,17 @@
     .tab{padding:12px 16px;font-size:15px;flex:1;text-align:center;}
     .row-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));}
     .hint{font-size:13px;line-height:1.7;}
+    /* 手机顶部：KPI 改 2 列、标题区竖排，避免总市值等被压窄显示不全 */
+    .top{flex-direction:column;align-items:stretch;gap:12px;}
+    .top > div:last-child{justify-content:flex-start!important;}
+    .comment{text-align:left;max-width:none;}
+    .title{font-size:22px;}
+    .career{max-width:none;}
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px;}
+    .kpi{min-height:0;padding:13px 12px;}
+    .kpi .lab{font-size:12px;}
+    .kpi .val{font-size:18px;margin-top:8px;}
+    #week-sel{font-size:15px;}
   }
   .panels > .panel{min-width:0;overflow:hidden;}
   .prow{display:flex;align-items:center;margin:9px 0;font-size:13px;}
@@ -1541,8 +1552,17 @@ async function doConnect(){
     toast("连接失败："+e.message);
   }
 }
+// 令牌/Gist ID 以页面输入框为准并记住，避免"填了却没生效"
+function readSyncInputs(cfg){
+  const t=(document.getElementById("sync-token")||{}).value;
+  const g=(document.getElementById("sync-gist")||{}).value;
+  if(t && t.trim()) cfg.token=t.trim();
+  if(g && g.trim()) cfg.gistId=g.trim();
+  if(cfg.token) saveSyncCfg(cfg);
+  return cfg;
+}
 async function doPull(){
-  const cfg=syncCfg();
+  const cfg=readSyncInputs(syncCfg());
   if(!cfg.token||!cfg.gistId){ toast("先填令牌和 Gist ID"); return; }
   try{
     const {data,updatedAt}=await cloudPull(cfg);
@@ -1552,7 +1572,7 @@ async function doPull(){
   }catch(e){ toast("拉取失败："+e.message); }
 }
 async function doPush(silent){
-  const cfg=syncCfg();
+  const cfg=readSyncInputs(syncCfg());
   if(!cfg.token||!cfg.gistId){ if(!silent) toast("先填令牌和 Gist ID"); return; }
   try{
     const j=await cloudPush(cfg, state);
